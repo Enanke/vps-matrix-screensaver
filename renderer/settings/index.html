@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>VPS Matrix Screensaver · 控制中心</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="title-group">
+        <div class="logo-dot"></div>
+        <div>
+          <h1>VPS MATRIX SCREENSAVER</h1>
+          <p class="subtitle">双屏极客控制台 & 全球雷达地图 · 3x-ui 实时遥测 · HVA 防残影守护</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="togglePauseBtn" class="btn btn-secondary">⏸ 暂停自动触发</button>
+        <button id="previewBtn" class="btn btn-primary">▶ 立即双屏预览</button>
+      </div>
+    </header>
+
+    <!-- Live Status Banner -->
+    <section class="status-strip">
+      <div class="stat-pill">
+        <span class="stat-label">数据源模式</span>
+        <strong id="liveModeText" class="stat-val warn">DEMO 模拟模式</strong>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">自动触发</span>
+        <strong id="triggerSummary" class="stat-val">闲置 5 分钟</strong>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">实时延迟 / 在线用户</span>
+        <strong id="liveTelemetrySummary" class="stat-val">-- ms · 0 人</strong>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">快捷键</span>
+        <strong id="hotkeySummary" class="stat-val">Ctrl+Alt+S</strong>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs">
+      <button class="tab active" data-tab="panel">1. 3x-ui 面板连接</button>
+      <button class="tab" data-tab="node">2. 节点与地图坐标</button>
+      <button class="tab" data-tab="screensaver">3. 触发与 HVA 防残影</button>
+      <button class="tab" data-tab="displays">4. 双屏显示器布局</button>
+    </nav>
+
+    <!-- Tab Panels -->
+    <main class="content">
+      <!-- Tab 1: 3x-ui Connection -->
+      <section id="tab-panel" class="tab-panel active">
+        <div class="card">
+          <div class="card-head">
+            <h2>3x-ui 控制面板数据源</h2>
+            <label class="switch-row">
+              <input type="checkbox" id="panelEnabled" />
+              <span>启用真实 3x-ui 数据（关闭时运行 Demo 演示模式）</span>
+            </label>
+          </div>
+
+          <div class="form-grid">
+            <div class="field field-full">
+              <label for="panelUrl">面板完整地址（含端口与 WebBasePath）</label>
+              <input type="text" id="panelUrl" placeholder="例如：https://45.134.212.88:2053/mybase 或 http://la.yourdomain.com:54321" />
+              <small>支持直接粘贴 3x-ui 登录页链接，程序会自动识别 BasePath 并调用 /server/status 与 /inbounds/onlines。</small>
+            </div>
+
+            <div class="field">
+              <label for="panelUsername">登录用户名</label>
+              <input type="text" id="panelUsername" placeholder="admin" />
+            </div>
+
+            <div class="field">
+              <label for="panelPassword">登录密码</label>
+              <input type="password" id="panelPassword" placeholder="仅保存在本机用户目录 config.json" />
+            </div>
+
+            <div class="field">
+              <label for="panelApiToken">API Bearer Token（可选，新版 3x-ui）</label>
+              <input type="password" id="panelApiToken" placeholder="填写后将优先使用 Token 鉴权" />
+            </div>
+
+            <div class="field">
+              <label for="panelTwoFactor">2FA 动态码（可选）</label>
+              <input type="text" id="panelTwoFactor" placeholder="未开启 2FA 请留空" />
+            </div>
+
+            <div class="field">
+              <label for="pollIntervalSec">刷新频率（秒）</label>
+              <input type="number" id="pollIntervalSec" min="2" max="30" value="3" />
+            </div>
+
+            <div class="field">
+              <label for="probePort">TCP 延迟探测端口（0 = 跟随面板端口）</label>
+              <input type="number" id="probePort" min="0" max="65535" value="0" />
+            </div>
+
+            <div class="field field-full">
+              <label class="checkbox-inline">
+                <input type="checkbox" id="ignoreTlsErrors" checked />
+                <span>忽略自签名 HTTPS 证书校验（使用 IP+HTTPS 访问 3x-ui 时建议勾选）</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button id="testPanelBtn" class="btn btn-outline">🔌 测试 3x-ui 连接</button>
+            <span id="testResultBox" class="test-result"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Node & Map Coordinates -->
+      <section id="tab-node" class="tab-panel">
+        <div class="card">
+          <h2>洛杉矶 VPS 展示信息（主屏地图右侧节点）</h2>
+          <div class="form-grid">
+            <div class="field">
+              <label for="nodeName">节点代号</label>
+              <input type="text" id="nodeName" placeholder="LAX-EDGE-01" />
+            </div>
+            <div class="field">
+              <label for="nodeLocation">地理位置标签</label>
+              <input type="text" id="nodeLocation" placeholder="Los Angeles, CA · US" />
+            </div>
+            <div class="field">
+              <label for="nodeProvider">机房 / 服务商备注</label>
+              <input type="text" id="nodeProvider" placeholder="Los Angeles VPS" />
+            </div>
+            <div class="field">
+              <label for="nodeHostOverride">展示 IP 覆盖（留空则自动读取 3x-ui）</label>
+              <input type="text" id="nodeHostOverride" placeholder="可选" />
+            </div>
+            <div class="field">
+              <label for="nodeLat">服务器纬度 (Lat)</label>
+              <input type="number" id="nodeLat" step="0.0001" value="34.0522" />
+            </div>
+            <div class="field">
+              <label for="nodeLon">服务器经度 (Lon)</label>
+              <input type="number" id="nodeLon" step="0.0001" value="-118.2437" />
+            </div>
+            <div class="field field-full">
+              <label for="speedTestUrl">点击卡片「按需下载测速」URL（平时不自动跑，零月流量浪费）</label>
+              <input type="text" id="speedTestUrl" placeholder="https://speed.cloudflare.com/__down?bytes=15000000" />
+            </div>
+            <div class="field field-full">
+              <label class="checkbox-inline">
+                <input type="checkbox" id="maskIp" />
+                <span>节点详情卡默认对公网 IP 进行打码（可在卡片内一键切换明文）</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>本机位置（主屏地图左侧起点）</h2>
+            <button id="detectGeoBtn" class="btn btn-outline btn-sm">📍 自动检测本机坐标</button>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="localLabel">本机终端名称</label>
+              <input type="text" id="localLabel" placeholder="我的电脑" />
+            </div>
+            <div class="field">
+              <label for="localCity">本机城市标签</label>
+              <input type="text" id="localCity" placeholder="Hohhot, CN" />
+            </div>
+            <div class="field">
+              <label for="localLat">本机纬度 (Lat)</label>
+              <input type="number" id="localLat" step="0.0001" value="40.8426" />
+            </div>
+            <div class="field">
+              <label for="localLon">本机经度 (Lon)</label>
+              <input type="number" id="localLon" step="0.0001" value="111.7492" />
+            </div>
+          </div>
+          <div id="geoDetectMsg" class="small-hint"></div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Screensaver & HVA Anti-Retention -->
+      <section id="tab-screensaver" class="tab-panel">
+        <div class="card">
+          <h2>屏保自动触发设置</h2>
+          <div class="form-grid">
+            <div class="field">
+              <label for="idleValue">无操作自动弹出时长</label>
+              <div class="inline-unit">
+                <input type="number" id="idleValue" min="10" max="7200" value="5" />
+                <select id="idleUnit">
+                  <option value="60">分钟</option>
+                  <option value="1">秒（方便测试）</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="exitMode">退出交互模式</label>
+              <select id="exitMode">
+                <option value="interactive">交互屏保模式（推荐：可点击地图，ESC/双击空白退出）</option>
+                <option value="classic">传统模式（任意按键退出）</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="hotkey">全局手动启动快捷键</label>
+              <input type="text" id="hotkey" value="CommandOrControl+Alt+S" />
+            </div>
+
+            <div class="field field-full checkbox-stack">
+              <label class="checkbox-inline">
+                <input type="checkbox" id="screensaverEnabled" checked />
+                <span>启用定时闲置自动触发</span>
+              </label>
+              <label class="checkbox-inline">
+                <input type="checkbox" id="pauseOnFullscreen" checked />
+                <span>全屏视频 / 游戏防打扰（检测到全屏独占应用时不弹出）</span>
+              </label>
+              <label class="checkbox-inline">
+                <input type="checkbox" id="launchAtStartup" />
+                <span>随 Windows 开机自动在托盘后台启动</span>
+              </label>
+              <label class="checkbox-inline">
+                <input type="checkbox" id="minimizeToTray" checked />
+                <span>关闭设置窗口时最小化到右下角系统托盘</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>HVA 面板防残影柔和守护</h2>
+          <div class="form-grid">
+            <div class="field field-full">
+              <label class="checkbox-inline">
+                <input type="checkbox" id="antiBurnInEnabled" checked />
+                <span>启用温和像素微移与周期性暗场扫频刷新</span>
+              </label>
+            </div>
+            <div class="field">
+              <label for="pixelShiftPx">像素漂移幅度（px，建议 8–16）</label>
+              <input type="number" id="pixelShiftPx" min="4" max="32" value="12" />
+            </div>
+            <div class="field">
+              <label for="pixelShiftIntervalSec">漂移周期（秒）</label>
+              <input type="number" id="pixelShiftIntervalSec" min="15" max="180" value="45" />
+            </div>
+            <div class="field">
+              <label for="sweepIntervalMin">暗场扫频刷新间隔（分钟，0=关闭）</label>
+              <input type="number" id="sweepIntervalMin" min="0" max="60" value="8" />
+            </div>
+            <div class="field">
+              <label for="deepDimAfterMin">长时间无人操作后轻度降暗（分钟，0=关闭）</label>
+              <input type="number" id="deepDimAfterMin" min="0" max="180" value="30" />
+            </div>
+            <div class="field field-full">
+              <label class="checkbox-inline">
+                <input type="checkbox" id="crtScanlines" checked />
+                <span>启用复古 CRT 扫描线质感滤镜</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 4: Dual Displays -->
+      <section id="tab-displays" class="tab-panel">
+        <div class="card">
+          <div class="card-head">
+            <h2>已检测到的显示器拓扑</h2>
+            <button id="refreshDisplaysBtn" class="btn btn-outline btn-sm">↻ 重新检测</button>
+          </div>
+          <div id="displaysGrid" class="displays-grid"></div>
+          <div class="field field-full" style="margin-top: 14px;">
+            <label class="checkbox-inline">
+              <input type="checkbox" id="swapScreens" />
+              <span>对调主副屏角色（默认：横屏主屏显示世界地图，竖屏副屏显示复古控制台）</span>
+            </label>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Save Footer -->
+    <footer class="footer">
+      <span id="saveToast" class="save-toast"></span>
+      <div class="footer-right">
+        <button id="saveBtn" class="btn btn-primary">💾 保存配置</button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="../shared/formatters.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

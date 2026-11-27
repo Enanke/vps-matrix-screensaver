@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+  <title>Global VPS Link Map</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="crtOverlay" class="crt-overlay"></div>
+  <div id="phosphorSweep" class="phosphor-sweep"></div>
+
+  <div id="stage" class="map-stage">
+    <canvas id="worldCanvas"></canvas>
+
+    <!-- Top-Left Mission HUD -->
+    <header class="hud hud-top-left">
+      <div class="hud-eyebrow">// TRANS-PACIFIC LINK MONITOR</div>
+      <div class="hud-route">
+        <span id="localCityTag">HOHHOT, CN</span>
+        <span id="routeArrow" class="route-arrow">════▶</span>
+        <span id="nodeNameTag">LAX-EDGE-01</span>
+        <span id="statusPill" class="pill pill-demo">DEMO</span>
+      </div>
+      <div class="hud-metrics">
+        <span>RTT <strong id="hudLatency">-- ms</strong></span>
+        <span>DOWN <strong id="hudDown">0 B/s</strong></span>
+        <span>UP <strong id="hudUp">0 B/s</strong></span>
+        <span>ONLINE <strong id="hudUsers">0</strong></span>
+      </div>
+    </header>
+
+    <!-- Top-Right Clock HUD -->
+    <aside class="hud hud-top-right">
+      <div id="clockTime" class="big-clock">00:00:00</div>
+      <div id="clockDate" class="clock-sub">2026-01-01 · FRI</div>
+      <div id="idleCounter" class="idle-sub">SCREENSAVER ACTIVE · 00:00</div>
+    </aside>
+
+    <!-- Bottom-Left Latency Sparkline + PVA Guard -->
+    <aside class="hud hud-bottom-left">
+      <div class="spark-header">
+        <span>LINK LATENCY PULSE</span>
+        <span id="pvaGuardTag" class="pva-tag">HVA-GUARD · SHIFT 0,0</span>
+      </div>
+      <canvas id="latencySpark" width="320" height="58"></canvas>
+    </aside>
+
+    <!-- Bottom-Right Controls & Hints -->
+    <aside class="hud hud-bottom-right">
+      <div class="hint-line">单击 <strong>LAX 节点图标</strong> 查看服务器详情与测速</div>
+      <div class="hint-actions">
+        <span class="hint-key">ESC / 双击空白 退出</span>
+        <button id="openSettingsBtn" class="mini-btn" title="退出并打开设置中心">⚙ 设置</button>
+        <button id="exitBtn" class="mini-btn mini-btn-exit" title="退出双屏屏保">✕ 退出</button>
+      </div>
+    </aside>
+
+    <!-- Clickable LAX Node Inspector Popup Card -->
+    <section id="nodeCard" class="node-card hidden" role="dialog" aria-label="服务器详情">
+      <div class="card-header">
+        <div>
+          <div class="card-kicker">// VPS NODE INSPECTOR</div>
+          <h2 id="cardNodeName" class="card-title">LAX-EDGE-01</h2>
+        </div>
+        <button id="closeCardBtn" class="card-close" title="关闭卡片">✕</button>
+      </div>
+
+      <div class="card-status-strip">
+        <span id="cardLinkDot" class="status-dot"></span>
+        <span id="cardLinkState">BRIDGE ESTABLISHED</span>
+        <span id="cardXrayBadge" class="card-badge">XRAY RUNNING</span>
+      </div>
+
+      <div class="card-grid">
+        <div class="kv">
+          <span class="k">地理位置</span>
+          <span id="cardLocation" class="v">Los Angeles, CA · US</span>
+        </div>
+        <div class="kv">
+          <span class="k">坐标</span>
+          <span id="cardCoords" class="v">34.05°N, 118.24°W</span>
+        </div>
+        <div class="kv kv-full">
+          <span class="k">公网 IPv4</span>
+          <div class="ip-row">
+            <span id="cardIpv4" class="v mono-bright">--.--.--.--</span>
+            <button id="toggleMaskBtn" class="tiny-btn">隐藏/显示</button>
+          </div>
+        </div>
+        <div class="kv kv-full" id="ipv6Row">
+          <span class="k">公网 IPv6</span>
+          <span id="cardIpv6" class="v mono-soft">--</span>
+        </div>
+        <div class="kv">
+          <span class="k">服务商 / 备注</span>
+          <span id="cardProvider" class="v">Los Angeles VPS</span>
+        </div>
+        <div class="kv">
+          <span class="k">运行时长</span>
+          <span id="cardUptime" class="v">--</span>
+        </div>
+        <div class="kv">
+          <span class="k">实时延迟 / 抖动</span>
+          <span id="cardLatency" class="v">-- ms / -- ms</span>
+        </div>
+        <div class="kv">
+          <span class="k">3x-ui 在线用户</span>
+          <span id="cardUsers" class="v">0 人 (TCP 0)</span>
+        </div>
+        <div class="kv">
+          <span class="k">整机累计流量</span>
+          <span id="cardTraffic" class="v">↓0 B / ↑0 B</span>
+        </div>
+        <div class="kv">
+          <span class="k">CPU / 内存</span>
+          <span id="cardSys" class="v">0% / 0%</span>
+        </div>
+      </div>
+
+      <!-- On-demand Download Speedtest -->
+      <div class="speedtest-box">
+        <div class="speedtest-top">
+          <span class="k">按需下载测速（点击才消耗流量）</span>
+          <span id="speedResultText" class="speed-result">待测试</span>
+        </div>
+        <div class="speed-progress-track">
+          <div id="speedProgressFill" class="speed-progress-fill"></div>
+        </div>
+        <button id="speedTestBtn" class="speed-btn">⚡ 开始下载测速</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="../shared/formatters.js"></script>
+  <script src="../shared/pixelShift.js"></script>
+  <script src="./xpIcons.js"></script>
+  <script src="./serviceIcons.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

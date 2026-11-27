@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>VPS Matrix Console</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <canvas id="matrixBg"></canvas>
+  <div id="crtOverlay" class="crt-overlay"></div>
+  <div id="phosphorSweep" class="phosphor-sweep"></div>
+
+  <main id="stage" class="console-stage">
+    <!-- Top Header -->
+    <header class="panel header-panel">
+      <div class="header-top">
+        <div class="brand">
+          <span class="prompt">&gt;_</span>
+          <span id="nodeTitle" class="node-title">LAX-EDGE-01</span>
+          <span id="modeBadge" class="badge badge-demo">DEMO</span>
+        </div>
+        <div class="clock-block">
+          <span id="clockTime" class="clock-time">00:00:00</span>
+          <span id="clockDate" class="clock-date">2026-01-01</span>
+        </div>
+      </div>
+      <div class="header-meta">
+        <span>LOC: <strong id="nodeLocation">Los Angeles, CA · US</strong></span>
+        <span>UPTIME: <strong id="nodeUptime">--</strong></span>
+        <span>HVA-GUARD: <strong id="pvaStatus">SHIFT 0,0</strong></span>
+      </div>
+      <div id="errorBanner" class="error-banner hidden"></div>
+    </header>
+
+    <!-- Hero KPI Cards: Online Users & Latency -->
+    <section class="hero-grid">
+      <div class="panel hero-card">
+        <div class="section-label">// 3X-UI ACTIVE USERS</div>
+        <div class="hero-value-row">
+          <span id="onlineUsersCount" class="hero-number">0</span>
+          <span class="hero-unit">ONLINE</span>
+        </div>
+        <div class="hero-submeta">
+          <span>TCP: <strong id="tcpCount">0</strong></span>
+          <span>UDP: <strong id="udpCount">0</strong></span>
+          <span>CLIENTS: <strong id="totalClients">0</strong></span>
+        </div>
+        <div id="onlineUsersChips" class="user-chips">
+          <span class="chip muted">AWAITING SESSION...</span>
+        </div>
+      </div>
+
+      <div class="panel hero-card">
+        <div class="section-label">// LINK TELEMETRY</div>
+        <div class="hero-value-row">
+          <span id="latencyValue" class="hero-number">--</span>
+          <span class="hero-unit">ms</span>
+        </div>
+        <div class="hero-submeta">
+          <span>JITTER: <strong id="jitterValue">-- ms</strong></span>
+          <span>LOSS: <strong id="lossValue">0%</strong></span>
+        </div>
+        <div class="xray-pill-row">
+          <span class="xray-label">XRAY-CORE</span>
+          <span id="xrayState" class="xray-state">RUNNING</span>
+          <span id="xrayVersion" class="xray-ver">v--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- System Resources ASCII Gauges -->
+    <section class="panel resource-panel">
+      <div class="panel-header">
+        <span class="section-label">// SYSTEM RESOURCES</span>
+        <span id="loadAvgText" class="meta-right">LOAD: 0.00 / 0.00 / 0.00</span>
+      </div>
+      <div class="gauge-list">
+        <div class="gauge-row">
+          <span class="gauge-name">CPU</span>
+          <span id="cpuBar" class="gauge-bar">░░░░░░░░░░░░░░░░░░░░</span>
+          <span id="cpuPct" class="gauge-val">0.0%</span>
+        </div>
+        <div class="gauge-row">
+          <span class="gauge-name">MEM</span>
+          <span id="memBar" class="gauge-bar">░░░░░░░░░░░░░░░░░░░░</span>
+          <span id="memVal" class="gauge-val">0 / 0 GB</span>
+        </div>
+        <div class="gauge-row">
+          <span class="gauge-name">DSK</span>
+          <span id="diskBar" class="gauge-bar">░░░░░░░░░░░░░░░░░░░░</span>
+          <span id="diskVal" class="gauge-val">0 / 0 GB</span>
+        </div>
+        <div class="gauge-row">
+          <span class="gauge-name">SWP</span>
+          <span id="swapBar" class="gauge-bar">░░░░░░░░░░░░░░░░░░░░</span>
+          <span id="swapVal" class="gauge-val">0 / 0 GB</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Real-time Network I/O Oscilloscope -->
+    <section class="panel scope-panel">
+      <div class="panel-header">
+        <span class="section-label">// NET I/O OSCILLOSCOPE</span>
+        <div class="scope-legend">
+          <span class="legend-down">■ RX <strong id="rxSpeed">0 B/s</strong></span>
+          <span class="legend-up">▤ TX <strong id="txSpeed">0 B/s</strong></span>
+        </div>
+      </div>
+      <div class="scope-canvas-wrap">
+        <canvas id="netScopeCanvas"></canvas>
+      </div>
+      <div class="traffic-totals">
+        <div class="traffic-box">
+          <span class="traffic-label">TOTAL RX (DOWN)</span>
+          <span id="totalRx" class="traffic-val">0 B</span>
+        </div>
+        <div class="traffic-box">
+          <span class="traffic-label">TOTAL TX (UP)</span>
+          <span id="totalTx" class="traffic-val">0 B</span>
+        </div>
+        <div class="traffic-box">
+          <span class="traffic-label">COMBINED</span>
+          <span id="totalAll" class="traffic-val">0 B</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3x-ui Inbounds Table -->
+    <section class="panel inbounds-panel">
+      <div class="panel-header">
+        <span class="section-label">// 3X-UI INBOUND NODES</span>
+        <span id="inboundsCount" class="meta-right">0 ACTIVE</span>
+      </div>
+      <div id="inboundsList" class="inbounds-list">
+        <div class="empty-row">SCANNING INBOUNDS...</div>
+      </div>
+    </section>
+
+    <!-- Live Terminal Log Stream -->
+    <section class="panel log-panel">
+      <div class="panel-header">
+        <span class="section-label">// LIVE TELEMETRY STREAM</span>
+        <span class="meta-right">[ESC / 双击空白退出]</span>
+      </div>
+      <div id="logStream" class="log-stream"></div>
+      <div class="cursor-line">
+        <span class="prompt">root@lax-monitor:~#</span>
+        <span class="cursor-block">█</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="../shared/formatters.js"></script>
+  <script src="../shared/pixelShift.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

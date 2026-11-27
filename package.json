@@ -1,0 +1,62 @@
+{
+  "name": "vps-matrix-screensaver",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Dual-screen retro CRT console & global radar map interactive screensaver with 3x-ui telemetry and anti-retention protection",
+  "keywords": [
+    "electron",
+    "screensaver",
+    "3x-ui",
+    "vps-monitor",
+    "dual-monitor",
+    "retro",
+    "radar-map"
+  ],
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "dist:win": "electron-builder --win nsis --x64 --publish never"
+  },
+  "dependencies": {
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "26.18.0"
+  },
+  "productName": "VPS Matrix Screensaver",
+  "build": {
+    "appId": "com.vpsmatrix.screensaver",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
+    }
+  }
+}
